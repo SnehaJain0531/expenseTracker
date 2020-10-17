@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "670153899891",
+    "firebase_url": "https://expensetracker-dcead.firebaseio.com",
+    "project_id": "expensetracker-dcead",
+    "storage_bucket": "expensetracker-dcead.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:670153899891:android:c469f4c026000df24e4f06",
+        "android_client_info": {
+          "package_name": "com.example.expensetracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "670153899891-cupe4lcc2s1agrqdibrptabalq3b1agj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjkeiNv327LJWZQMYqN8omWIOhlXV0UFs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "670153899891-cupe4lcc2s1agrqdibrptabalq3b1agj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
