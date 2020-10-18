@@ -1,5 +1,6 @@
 package com.example.expensetracker;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.DatePickerDialog;
@@ -9,6 +10,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.method.DigitsKeyListener;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -27,6 +29,11 @@ import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -39,11 +46,15 @@ String date_string;
 String pos;
 int dd,mm,yy;
 ArrayList<String> arrayList;
-Double cost=0.0;
-Double amt=0.0;
+
+int costInt;
 private DatePickerDialog.OnDateSetListener mDateSetListener;
 PieChart pieChart;
 int[] colorClass= new int[]{Color.RED,Color.CYAN,Color.MAGENTA,Color.GREEN};
+FirebaseDatabase database;
+DatabaseReference db1;
+    DatabaseReference db;
+String amount;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,12 +80,10 @@ int[] colorClass= new int[]{Color.RED,Color.CYAN,Color.MAGENTA,Color.GREEN};
                 TextView date=(TextView)findViewById(R.id.textView2);
                 String today_date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
                 String date_array[] = today_date.split("-");
-
                 dd = Integer.parseInt(date_array[2]);
                 mm = Integer.parseInt(date_array[1]);
                 yy = Integer.parseInt(date_array[0]);
                 date.setText(date_string);
-
                 if(yy==year) {
                     if (mm <= month+1) {
                         if (dd <= day) {
@@ -117,26 +126,55 @@ int[] colorClass= new int[]{Color.RED,Color.CYAN,Color.MAGENTA,Color.GREEN};
             }
         });
 
+
         pieChart = findViewById(R.id.pie);
         pieChart.setVisibility(View.GONE);
 
-            Button visual=(Button)findViewById(R.id.button2);
-            visual.setOnClickListener(new View.OnClickListener() {
+        Button visual=(Button)findViewById(R.id.button2);
+        visual.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                      if(date_string==null) {
+                    if(date_string==null) {
                         Toast.makeText(MainActivity.this,"Select a Date",Toast.LENGTH_SHORT).show();
                     }
                       else {
                           pieChart.setVisibility(View.VISIBLE);
                           ArrayList<PieEntry> dataval=new ArrayList<>();
-                          //read the values from firebase
-                          //if a date has no entry toast msg
 
-                          dataval.add(new PieEntry(15,"House"));
-                          dataval.add(new PieEntry(30,"Food"));
-                          dataval.add(new PieEntry(25,"Health"));
-                          dataval.add(new PieEntry(30,"Others"));
+                        String date_array[] = date_string.split("/");
+                        String dd = date_array[0];
+                        String mm = date_array[1];
+                        String yy = date_array[2];
+                        final ArrayList<Integer> someInts=new ArrayList<Integer>();
+                        for(int i=0;i<4;i++){
+                            someInts.add(0+i+1);
+                        }
+
+                        DatabaseReference data =FirebaseDatabase.getInstance().getReference();
+                        data.child(yy).child(mm).child(dd).child("Cost").addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                for(DataSnapshot snap:snapshot.getChildren()){
+                                    String parent=snapshot.getKey();
+                                    for(int i=0;i<4;i++){
+                                        if(parent== arrayList.get(i)){
+                                           // someInts.set(i,snapshot.child(parent).getValue());
+                                            Toast.makeText(MainActivity.this,"Inside visualise",Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+
+                            }
+                        });
+
+                          dataval.add(new PieEntry(someInts.get(0),"Households"));
+                          dataval.add(new PieEntry(someInts.get(1),"Food"));
+                          dataval.add(new PieEntry(someInts.get(2),"Health"));
+                          dataval.add(new PieEntry(someInts.get(3),"Others"));
 
 
                           PieDataSet pieDataSet= new PieDataSet(dataval,"");
@@ -144,7 +182,7 @@ int[] colorClass= new int[]{Color.RED,Color.CYAN,Color.MAGENTA,Color.GREEN};
                           PieData pieData= new PieData(pieDataSet);
                           pieChart.setData(pieData);
                           pieChart.invalidate();
-                          pieChart.setDrawEntryLabels(true);
+                          pieChart.setDrawEntryLabels(false);
                           pieChart.setCenterTextRadiusPercent(20);
                       }
                 }
@@ -154,35 +192,77 @@ int[] colorClass= new int[]{Color.RED,Color.CYAN,Color.MAGENTA,Color.GREEN};
             curr.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Toast.makeText(MainActivity.this,"Expense for today: Rs "+cost,Toast.LENGTH_LONG).show();
+                    String date_array[] = date_string.split("/");
+                    String dd = date_array[0];
+                    String mm = date_array[1];
+                    String yy = date_array[2];
+                    DatabaseReference db = FirebaseDatabase.getInstance().getReference();
+                    db.child(yy).child(mm).child(dd).child("Total").addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            Toast.makeText(MainActivity.this,"Expense for today: Rs "+snapshot.getValue(String.class),Toast.LENGTH_LONG).show();
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+
                 }
             });
 
             final EditText editText=(EditText) findViewById(R.id.editTextNumber);
-            editText.setKeyListener(DigitsKeyListener.getInstance(false,true)); // positive decimals numbers.
-           // amt=  Double.parseDouble(editText.getText().toString());
+            editText.setKeyListener(DigitsKeyListener.getInstance(false,true));
 
 
             Button add=(Button)findViewById(R.id.button);
             add.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (date_string == null)  //&& if expense amount is empy
+                    amount= editText.getText().toString();
+//                    costInt=Integer.parseInt(amount);
+                    if (date_string == null)
                     {
                         Toast.makeText(MainActivity.this,"Select a Date",Toast.LENGTH_SHORT).show();
                     }
                     else {
-                        if(editText.getText()==null){ //or amount =0.0
+                        if(amount.isEmpty()==true){
                             Toast.makeText(MainActivity.this,"No amount entered",Toast.LENGTH_SHORT).show();
                         }
                         else{
 
-                            Toast.makeText(MainActivity.this, "Expense Recorder:Rs."+amt, Toast.LENGTH_SHORT).show();
-                            //update cost, write/update firebase - under category and daycost
-                              //     cost=cost+amt;
-                            editText.setText("");
+                            String date_array[] = date_string.split("/");
+                            final String dd = date_array[0];
+                            final String mm = date_array[1];
+                            final String yy = date_array[2];
+                            db1 = FirebaseDatabase.getInstance().getReference();
+                            Toast.makeText(MainActivity.this, "part1" + amount, Toast.LENGTH_SHORT).show();
+                            db1.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                   try {
+                                       int old = Integer.parseInt(snapshot.child(yy).child(mm).child(dd).child("Cost").child(pos).getValue(String.class));
+                                       int newval = old + Integer.parseInt(amount);
+                                       db1.child(yy).child(mm).child(dd).child("Cost").child(pos).setValue(newval);
 
-                            //last amt =0.0 //to revert back to 0 for next proper addition
+                                       int prevTotal = Integer.parseInt(snapshot.child(yy).child(mm).child(dd).child("Total").getValue(String.class));
+                                       int newTotal = prevTotal + Integer.parseInt(amount);
+                                       db1.child(yy).child(mm).child(dd).child("Total").setValue(newTotal);
+                                       Toast.makeText(MainActivity.this, "Expense Recorded:Rs." + amount, Toast.LENGTH_SHORT).show();
+                                   }
+                                   catch (Exception exception){
+                                    //   Log.e("msg", "I got an error", exception);
+                                       Toast.makeText(MainActivity.this, exception.getMessage(), Toast.LENGTH_SHORT).show();
+                                   }
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+
+                                }
+                            });
+                            editText.setText("");
                         }
 
                     }
