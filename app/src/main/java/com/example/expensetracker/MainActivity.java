@@ -155,11 +155,12 @@ String amount;
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 for(DataSnapshot snap:snapshot.getChildren()){
-                                    String parent=snapshot.getKey();
+                                    String parent=snap.getKey();
                                     for(int i=0;i<4;i++){
-                                        if(parent== arrayList.get(i)){
-                                           // someInts.set(i,snapshot.child(parent).getValue());
+                                        if(parent.equalsIgnoreCase(arrayList.get(i))){
+                                            someInts.set(i,snap.child(parent).getValue(Integer.class));
                                             Toast.makeText(MainActivity.this,"Inside visualise",Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(MainActivity.this,date_string+pos+snap.child(parent).getValue(Integer.class),Toast.LENGTH_SHORT).show();
                                         }
                                     }
                                 }
@@ -193,14 +194,14 @@ String amount;
                 @Override
                 public void onClick(View view) {
                     String date_array[] = date_string.split("/");
-                    String dd = date_array[0];
-                    String mm = date_array[1];
-                    String yy = date_array[2];
-                    DatabaseReference db = FirebaseDatabase.getInstance().getReference();
-                    db.child(yy).child(mm).child(dd).child("Total").addListenerForSingleValueEvent(new ValueEventListener() {
+                    final String dd = date_array[0];
+                    final String mm = date_array[1];
+                    final String yy = date_array[2];
+                    db = FirebaseDatabase.getInstance().getReference();
+                    db.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            Toast.makeText(MainActivity.this,"Expense for today: Rs "+snapshot.getValue(String.class),Toast.LENGTH_LONG).show();
+                            Toast.makeText(MainActivity.this,"Expense for today: Rs "+snapshot.child(yy).child(mm).child(dd).child("Total").getValue(String.class),Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
@@ -237,29 +238,37 @@ String amount;
                             final String mm = date_array[1];
                             final String yy = date_array[2];
                             db1 = FirebaseDatabase.getInstance().getReference();
-                            Toast.makeText(MainActivity.this, "part1" + amount, Toast.LENGTH_SHORT).show();
                             db1.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                    int old;
                                    try {
-                                       int old = Integer.parseInt(snapshot.child(yy).child(mm).child(dd).child("Cost").child(pos).getValue(String.class));
+                                      try{
+                                          old = (snapshot.child(yy).child(mm).child(dd).child("Cost").child(pos).getValue(Integer.class));
+                                      }
+                                      catch (Exception e){
+                                          old=0;
+                                      }
                                        int newval = old + Integer.parseInt(amount);
                                        db1.child(yy).child(mm).child(dd).child("Cost").child(pos).setValue(newval);
 
-                                       int prevTotal = Integer.parseInt(snapshot.child(yy).child(mm).child(dd).child("Total").getValue(String.class));
+                                       int prevTotal ;
+                                       try {
+                                           prevTotal=(snapshot.child(yy).child(mm).child(dd).child("Total").getValue(Integer.class));
+                                       }
+                                       catch(Exception e){
+                                           prevTotal=0;
+                                       }
                                        int newTotal = prevTotal + Integer.parseInt(amount);
                                        db1.child(yy).child(mm).child(dd).child("Total").setValue(newTotal);
                                        Toast.makeText(MainActivity.this, "Expense Recorded:Rs." + amount, Toast.LENGTH_SHORT).show();
                                    }
                                    catch (Exception exception){
-                                    //   Log.e("msg", "I got an error", exception);
                                        Toast.makeText(MainActivity.this, exception.getMessage(), Toast.LENGTH_SHORT).show();
                                    }
                                 }
-
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError error) {
-
                                 }
                             });
                             editText.setText("");
