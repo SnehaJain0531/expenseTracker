@@ -153,26 +153,31 @@ String amount;
                         data.child(yy).child(mm).child(dd).child("Cost").addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                someInts.clear();
-                                for(DataSnapshot snap:snapshot.getChildren()){
-                                    String parent=snap.getKey();
-                                    for(int i=0;i<4;i++){
-                                        if(parent.equalsIgnoreCase(arrayList.get(i))){
-                                            someInts.add(snap.getValue(Integer.class));
+                                try {
+                                    someInts.clear();
+
+                                    for (DataSnapshot snap : snapshot.getChildren()) {
+                                        String parent = snap.getKey();
+                                        for (int i = 0; i < 4; i++) {
+                                            if (parent.equalsIgnoreCase(arrayList.get(i))) {
+                                                someInts.add(snap.getValue(Integer.class));
+                                            }
                                         }
                                     }
+                                    dataval.add(new PieEntry(someInts.get(0), "Households"));
+                                    dataval.add(new PieEntry(someInts.get(1), "Food"));
+                                    dataval.add(new PieEntry(someInts.get(2), "Health"));
+                                    dataval.add(new PieEntry(someInts.get(3), "Others"));
+                                    PieDataSet pieDataSet = new PieDataSet(dataval, "");
+                                    pieDataSet.setColors(colorClass);
+                                    PieData pieData = new PieData(pieDataSet);
+                                    pieChart.setData(pieData);
+                                    pieChart.invalidate();
+                                    pieChart.setDrawEntryLabels(false);
+                                    pieChart.setCenterTextRadiusPercent(20);
                                 }
-                                dataval.add(new PieEntry(someInts.get(0),"Households"));
-                                dataval.add(new PieEntry(someInts.get(1),"Food"));
-                                dataval.add(new PieEntry(someInts.get(2),"Health"));
-                                dataval.add(new PieEntry(someInts.get(3),"Others"));
-                                PieDataSet pieDataSet= new PieDataSet(dataval,"");
-                                pieDataSet.setColors(colorClass);
-                                PieData pieData= new PieData(pieDataSet);
-                                pieChart.setData(pieData);
-                                pieChart.invalidate();
-                                pieChart.setDrawEntryLabels(false);
-                                pieChart.setCenterTextRadiusPercent(20);
+                                catch (Exception e){
+                                }
                             }
 
                             @Override
