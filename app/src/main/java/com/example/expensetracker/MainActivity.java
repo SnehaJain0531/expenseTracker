@@ -59,7 +59,6 @@ String amount;
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         TextView date=(TextView)findViewById(R.id.textView2);
         date.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -139,12 +138,12 @@ String amount;
                     }
                       else {
                           pieChart.setVisibility(View.VISIBLE);
-                          ArrayList<PieEntry> dataval=new ArrayList<>();
+                          final ArrayList<PieEntry> dataval=new ArrayList<>();
 
                         String date_array[] = date_string.split("/");
-                        String dd = date_array[0];
-                        String mm = date_array[1];
-                        String yy = date_array[2];
+                        final String dd = date_array[0];
+                        final String mm = date_array[1];
+                        final String yy = date_array[2];
                         final ArrayList<Integer> someInts=new ArrayList<Integer>();
                         for(int i=0;i<4;i++){
                             someInts.add(0+i+1);
@@ -154,16 +153,26 @@ String amount;
                         data.child(yy).child(mm).child(dd).child("Cost").addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                someInts.clear();
                                 for(DataSnapshot snap:snapshot.getChildren()){
                                     String parent=snap.getKey();
                                     for(int i=0;i<4;i++){
                                         if(parent.equalsIgnoreCase(arrayList.get(i))){
-                                            someInts.set(i,snap.child(parent).getValue(Integer.class));
-                                            Toast.makeText(MainActivity.this,"Inside visualise",Toast.LENGTH_SHORT).show();
-                                            Toast.makeText(MainActivity.this,date_string+pos+snap.child(parent).getValue(Integer.class),Toast.LENGTH_SHORT).show();
+                                            someInts.add(snap.getValue(Integer.class));
                                         }
                                     }
                                 }
+                                dataval.add(new PieEntry(someInts.get(0),"Households"));
+                                dataval.add(new PieEntry(someInts.get(1),"Food"));
+                                dataval.add(new PieEntry(someInts.get(2),"Health"));
+                                dataval.add(new PieEntry(someInts.get(3),"Others"));
+                                PieDataSet pieDataSet= new PieDataSet(dataval,"");
+                                pieDataSet.setColors(colorClass);
+                                PieData pieData= new PieData(pieDataSet);
+                                pieChart.setData(pieData);
+                                pieChart.invalidate();
+                                pieChart.setDrawEntryLabels(false);
+                                pieChart.setCenterTextRadiusPercent(20);
                             }
 
                             @Override
@@ -172,19 +181,6 @@ String amount;
                             }
                         });
 
-                          dataval.add(new PieEntry(someInts.get(0),"Households"));
-                          dataval.add(new PieEntry(someInts.get(1),"Food"));
-                          dataval.add(new PieEntry(someInts.get(2),"Health"));
-                          dataval.add(new PieEntry(someInts.get(3),"Others"));
-
-
-                          PieDataSet pieDataSet= new PieDataSet(dataval,"");
-                          pieDataSet.setColors(colorClass);
-                          PieData pieData= new PieData(pieDataSet);
-                          pieChart.setData(pieData);
-                          pieChart.invalidate();
-                          pieChart.setDrawEntryLabels(false);
-                          pieChart.setCenterTextRadiusPercent(20);
                       }
                 }
             });
@@ -201,7 +197,7 @@ String amount;
                     db.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            Toast.makeText(MainActivity.this,"Expense for today: Rs "+snapshot.child(yy).child(mm).child(dd).child("Total").getValue(String.class),Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this,"Expense for today: Rs "+snapshot.child(yy).child(mm).child(dd).child("Total").getValue(Integer.class),Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
@@ -222,7 +218,6 @@ String amount;
                 @Override
                 public void onClick(View view) {
                     amount= editText.getText().toString();
-//                    costInt=Integer.parseInt(amount);
                     if (date_string == null)
                     {
                         Toast.makeText(MainActivity.this,"Select a Date",Toast.LENGTH_SHORT).show();
